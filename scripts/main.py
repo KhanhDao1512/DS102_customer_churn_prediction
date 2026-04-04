@@ -1,11 +1,15 @@
-import sys
-import os
+from pathlib import Path
+import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '/home/huyy-giaa/Develop/DS102_customer_churn_prediction')))
+# Bước 1: Lấy đường dẫn của thư mục chứa file code hiện tại
+current_dir = Path(__file__).parent
 
-from src.data.load_data import load_data
+# Bước 2: Dùng dấu gạch chéo (/) để tự động nối đường dẫn. 
+# pathlib sẽ tự động đổi dấu gạch này thành \ nếu nó phát hiện đang chạy trên Windows.
+# Giả sử bạn muốn lùi ra một cấp (..) rồi chui vào thư mục 'data'
+file_path = current_dir.parent / 'data' / 'raw' / 'WA_Fn-UseC_-Telco-Customer-Churn.csv'
 
-if __name__ == "__main__":
-    data = load_data("data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+# Bước 3: Đọc file
+df = pd.read_csv(file_path)
 
-    print(data.head())
+print(df.head())
