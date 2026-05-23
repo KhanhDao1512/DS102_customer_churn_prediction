@@ -1,0 +1,242 @@
+\documentclass[conference]{IEEEtran}
+
+% Giữ lại dòng này nếu có nhu cầu ghi nhận funding ở footnote đầu trang.
+\IEEEoverridecommandlockouts
+
+\usepackage[T5]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[vietnamese]{babel}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Dự đoán rời bỏ khách hàng (Customer Churn Prediction) bằng các mô hình học máy cho dữ liệu bảng}
+
+\author{
+\IEEEauthorblockN{Tên sinh viên 1}
+\IEEEauthorblockA{
+\textit{Khoa/Bộ môn} \\
+\textit{Trường/Đơn vị} \\
+Thành phố, Quốc gia \\
+email1@example.com
+}
+\and
+\IEEEauthorblockN{Tên sinh viên 2}
+\IEEEauthorblockA{
+\textit{Khoa/Bộ môn} \\
+\textit{Trường/Đơn vị} \\
+Thành phố, Quốc gia \\
+email2@example.com
+}
+\and
+\IEEEauthorblockN{Tên sinh viên 3}
+\IEEEauthorblockA{
+\textit{Khoa/Bộ môn} \\
+\textit{Trường/Đơn vị} \\
+Thành phố, Quốc gia \\
+email3@example.com
+}
+}
+
+\maketitle
+
+\begin{abstract}
+Bài báo cáo này trình bày quy trình xây dựng hệ thống dự đoán rời bỏ khách hàng trên dữ liệu bảng, bao gồm tiền xử lý dữ liệu, khai thác đặc trưng, huấn luyện mô hình, tối ưu tham số và đánh giá kết quả. Mục tiêu của nghiên cứu là xây dựng một pipeline có khả năng phát hiện khách hàng có nguy cơ churn với hiệu quả tốt, đồng thời đảm bảo tính giải thích được ở mức phù hợp cho báo cáo học thuật.
+\end{abstract}
+
+\begin{IEEEkeywords}
+customer churn, machine learning, tabular data, feature engineering, classification, imbalanced data
+\end{IEEEkeywords}
+
+\section{Giới thiệu}
+\subsection{Bối cảnh}
+Rời bỏ khách hàng là một vấn đề quan trọng trong nhiều lĩnh vực như viễn thông, tài chính và dịch vụ số. Việc phát hiện sớm khách hàng có nguy cơ rời bỏ giúp doanh nghiệp chủ động triển khai các chính sách giữ chân phù hợp.
+
+\subsection{Phạm vi}
+Báo cáo tập trung vào bài toán phân loại nhị phân trên dữ liệu khách hàng dạng bảng. Dữ liệu đầu vào được xử lý theo pipeline có sẵn trong project và không đi sâu vào các nguồn dữ liệu dạng chuỗi thời gian hay dữ liệu phi cấu trúc.
+
+\subsection{Bài toán}
+Cho trước thông tin lịch sử và đặc trưng hành vi của khách hàng, mục tiêu là dự đoán nhãn churn/no-churn.
+
+\subsection{Mục tiêu}
+\begin{itemize}
+    \item Xây dựng quy trình tiền xử lý và feature engineering phù hợp với dữ liệu tabular.
+    \item So sánh nhiều mô hình phân loại phổ biến trên cùng một quy trình huấn luyện.
+    \item Tối ưu mô hình tốt nhất bằng điều chỉnh tham số và lựa chọn ngưỡng dự đoán.
+    \item Báo cáo kết quả theo các chỉ số đánh giá phù hợp với dữ liệu mất cân bằng.
+\end{itemize}
+
+\section{Cơ sở lý thuyết}
+\subsection{Customer churn prediction}
+Phần này trình bày khái niệm churn, ý nghĩa kinh doanh của bài toán và các yếu tố thường ảnh hưởng đến quyết định rời bỏ của khách hàng.
+
+\subsection{Tiền xử lý dữ liệu}
+Phần này mô tả các kỹ thuật chuẩn hóa dữ liệu đầu vào, bao gồm xử lý giá trị thiếu, chuyển đổi kiểu dữ liệu, mã hóa biến phân loại và chuẩn hóa biến số.
+
+\subsection{Feature engineering}
+Phần này giải thích các nhóm đặc trưng được tạo mới từ dữ liệu gốc nhằm tăng khả năng biểu diễn tín hiệu churn cho mô hình học máy.
+
+\subsection{Mô hình phân loại}
+Phần này trình bày ngắn gọn các mô hình sử dụng trong thí nghiệm, ví dụ Logistic Regression, Random Forest, Gradient Boosting, XGBoost, LightGBM và CatBoost.
+
+\subsection{Metric đánh giá}
+Vì bài toán churn thường mất cân bằng lớp, báo cáo ưu tiên các metric như Precision, Recall, F1-score và ROC-AUC thay vì chỉ dùng Accuracy.
+
+\section{Dữ liệu và khám phá dữ liệu}
+\subsection{Nguồn dữ liệu}
+Dữ liệu sử dụng trong project là bộ Telco Customer Churn, lưu tại \texttt{data/raw/WA\_Fn-UseC\_-Telco-Customer-Churn.csv}. Phần này nên mô tả ngắn gọn nguồn gốc, số lượng mẫu và ý nghĩa bài toán từ bộ dữ liệu.
+
+\subsection{Đặc trưng dữ liệu}
+Trình bày số lượng thuộc tính, kiểu dữ liệu, biến mục tiêu và các nhóm đặc trưng chính như thông tin cá nhân, thông tin hợp đồng, dịch vụ đang sử dụng và thông tin thanh toán.
+
+\subsection{Phân tích khám phá dữ liệu}
+\begin{itemize}
+    \item Phân bố nhãn churn và non-churn.
+    \item Mối liên hệ giữa tenure, MonthlyCharges, TotalCharges và nhãn mục tiêu.
+    \item Tỷ lệ thiếu dữ liệu, độ phân tán và cardinality của các biến phân loại.
+\end{itemize}
+
+\subsection{Tiền xử lý dữ liệu}
+Theo code hiện tại của project, quy trình tiền xử lý gồm:
+\begin{itemize}
+    \item Loại bỏ \texttt{customerID}.
+    \item Chuyển \texttt{TotalCharges} sang kiểu số.
+    \item Điền giá trị thiếu của \texttt{TotalCharges} bằng median.
+    \item Mã hóa \texttt{Churn} từ \texttt{Yes/No} sang \texttt{1/0}.
+\end{itemize}
+
+\subsection{Chia tập dữ liệu}
+Dữ liệu được chia thành tập train/test theo tỉ lệ cố định và giữ phân bố nhãn bằng stratified split. Nếu bài toán có yếu tố thời gian ở phiên bản mở rộng, có thể thay bằng horizon-aware split.
+
+\section{Tổng quan hệ thống}
+\subsection{Pipeline tổng quát}
+Hệ thống được xây dựng theo chuỗi bước: nạp dữ liệu, làm sạch, tạo đặc trưng, chia tập, huấn luyện nhiều mô hình, tinh chỉnh tham số, đánh giá trên tập kiểm tra và trực quan hóa kết quả.
+
+\subsection{Luồng xử lý}
+\begin{enumerate}
+    \item Load dữ liệu thô.
+    \item Làm sạch và chuẩn hóa dữ liệu đầu vào.
+    \item Tạo đặc trưng mới từ dữ liệu gốc.
+    \item Chia train/test.
+    \item So sánh các mô hình.
+    \item Tuning mô hình tốt nhất.
+    \item Đánh giá bằng metric và biểu đồ.
+\end{enumerate}
+
+\section{Feature Engineering}
+\subsection{Cơ sở lý thuyết}
+Phần này mô tả lý do các đặc trưng dẫn xuất có thể giúp mô hình nhận biết tín hiệu churn tốt hơn đặc trưng gốc, đặc biệt trong dữ liệu khách hàng có nhiều biến categorical và tương tác giữa các biến.
+
+\subsection{Lý do lựa chọn}
+Các đặc trưng được chọn nhằm khai thác những mẫu hành vi thường gắn với churn, chẳng hạn khách hàng mới, khách hàng có chi phí cao, hợp đồng month-to-month, thanh toán rủi ro cao hoặc ít sử dụng dịch vụ bổ sung.
+
+\subsection{Áp dụng trong project}
+Theo module \texttt{src/features/features.py}, các feature chính gồm:
+\begin{itemize}
+    \item Nhóm tenure: \texttt{is\_new\_risk\_customer}, \texttt{is\_loyal\_customer}, \texttt{tenure\_group}.
+    \item Nhóm charge: \texttt{avg\_monthly\_spent}, \texttt{high\_monthly\_charge}, \texttt{charge\_per\_month}, \texttt{high\_value\_customer}.
+    \item Nhóm contract/internet: \texttt{is\_month\_to\_month}, \texttt{is\_fiber\_optic}.
+    \item Nhóm security/support: \texttt{has\_online\_security}, \texttt{has\_tech\_support}.
+    \item Nhóm payment risk: \texttt{high\_risk\_payment}.
+    \item Nhóm tương tác: \texttt{services\_count}, \texttt{fiber\_monthly\_contract}.
+\end{itemize}
+
+\subsection{Kết quả sau feature engineering}
+Phần này nên báo cáo số lượng feature trước và sau khi tạo đặc trưng, đồng thời nhận xét feature nào có tác động rõ hơn đến hiệu quả mô hình.
+
+\section{Mô hình hóa}
+\subsection{Cơ sở lý thuyết từng mô hình}
+Phần này trình bày ngắn gọn nguyên lý của từng mô hình được sử dụng trong thí nghiệm, bao gồm:
+\begin{itemize}
+    \item Logistic Regression.
+    \item Random Forest.
+    \item Gradient Boosting.
+    \item XGBoost.
+    \item LightGBM.
+    \item CatBoost.
+\end{itemize}
+
+\subsection{Lý do lựa chọn}
+Các mô hình trên được chọn vì phù hợp với dữ liệu bảng, có khả năng xử lý quan hệ phi tuyến và cho phép so sánh giữa mô hình tuyến tính và mô hình cây boosting.
+
+\subsection{So sánh mô hình}
+Trong code hiện tại, các mô hình được đánh giá bằng cross-validation với scoring theo F1-score để phù hợp với bài toán mất cân bằng lớp.
+
+\subsection{Ensemble}
+Nếu có sử dụng ensemble, phần này mô tả phương pháp kết hợp mô hình như voting, stacking hoặc blending, cùng lý do lựa chọn.
+
+\section{Huấn luyện và Tuning}
+\subsection{Quy trình train/test split}
+Trong pipeline hiện tại, dữ liệu được chia train/test trước khi huấn luyện, sau đó toàn bộ quá trình tiền xử lý và SMOTE được đặt bên trong pipeline để tránh rò rỉ dữ liệu.
+
+\subsection{Chiến lược hai giai đoạn}
+\begin{itemize}
+    \item Giai đoạn 1: so sánh mô hình cơ sở bằng cross-validation.
+    \item Giai đoạn 2: chọn mô hình tốt nhất để tuning và đánh giá cuối cùng.
+\end{itemize}
+
+\subsection{Xử lý mất cân bằng lớp}
+Project đang sử dụng SMOTE trong pipeline huấn luyện để cân bằng số lượng mẫu giữa hai lớp.
+
+\subsection{Tuning siêu tham số}
+Trong module hiện tại, RandomizedSearchCV được dùng để tìm bộ tham số tốt cho các mô hình như Random Forest, XGBoost, LightGBM và CatBoost. Phần này nên báo cáo bộ tham số cuối cùng của mô hình tốt nhất.
+
+\subsection{Chọn ngưỡng dự đoán}
+Sau khi huấn luyện, mô hình được đánh giá thêm bằng cách quét nhiều ngưỡng xác suất để chọn threshold tối ưu theo F1-score, thay vì mặc định ngưỡng 0.5.
+
+\section{Kết quả và nhận xét}
+\subsection{Kết quả mô hình}
+Phần này nên trình bày bảng so sánh các mô hình theo Accuracy, Precision, Recall, F1-score và ROC-AUC.
+
+\subsection{Kết quả ensemble}
+Nếu có ensemble, phần này so sánh ensemble với mô hình đơn lẻ để xem có cải thiện hay không.
+
+\subsection{Phân tích nhầm lẫn}
+Nên bổ sung confusion matrix để phân tích false positive và false negative, từ đó nhận xét mức độ hữu ích của mô hình trong bối cảnh giữ chân khách hàng.
+
+\subsection{Nhận xét}
+Phần này tóm tắt mô hình tốt nhất, lý do nó hoạt động tốt hơn và những hạn chế còn tồn tại.
+
+\section{Kết luận và hướng phát triển}
+\subsection{Kết luận}
+Tóm tắt ngắn gọn quy trình, mô hình tốt nhất và kết quả chính của project.
+
+\subsection{Hướng phát triển}
+\begin{itemize}
+    \item Thử thêm feature engineering theo hướng hành vi chi tiết hơn.
+    \item Cải thiện chiến lược xử lý mất cân bằng dữ liệu.
+    \item Thử calibration xác suất để hỗ trợ ra quyết định kinh doanh.
+    \item Bổ sung giải thích mô hình bằng SHAP hoặc permutation importance.
+\end{itemize}
+
+\section*{Lời cảm ơn}
+Phần này dùng để cảm ơn giảng viên hướng dẫn, thành viên nhóm hoặc đơn vị cung cấp dữ liệu.
+
+\begin{thebibliography}{00}
+\bibitem{breiman2001randomforest}
+L. Breiman, ``Random forests,'' \textit{Machine Learning}, vol. 45, no. 1, pp. 5--32, 2001.
+
+\bibitem{chawla2002smote}
+N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P. Kegelmeyer, ``SMOTE: Synthetic minority over-sampling technique,'' \textit{Journal of Artificial Intelligence Research}, vol. 16, pp. 321--357, 2002.
+
+\bibitem{chen2016xgboost}
+T. Chen and C. Guestrin, ``XGBoost: A scalable tree boosting system,'' in \textit{Proc. 22nd ACM SIGKDD Int. Conf. Knowledge Discovery and Data Mining}, 2016, pp. 785--794.
+
+\bibitem{ke2017lightgbm}
+G. Ke et al., ``LightGBM: A highly efficient gradient boosting decision tree,'' in \textit{Advances in Neural Information Processing Systems}, 2017, pp. 3146--3154.
+
+\bibitem{prokhorenkova2018catboost}
+L. Prokhorenkova et al., ``CatBoost: unbiased boosting with categorical features,'' in \textit{Advances in Neural Information Processing Systems}, 2018, pp. 6638--6648.
+\end{thebibliography}
+
+\end{document}

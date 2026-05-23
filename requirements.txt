@@ -1,6 +1,7 @@
 pandas
 numpy
 scikit-learn
+imbalanced-learn
 mlflow
 fastapi
 uvicorn
@@ -8,3 +9,5 @@ pydantic
 pytest
 python-dotenv
 joblib
+seaborn
+matplotlib

@@ -1,64 +1,179 @@
 # src/features/feature_engineering.py
+
 import pandas as pd
 
-def encode_categorical_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Mã hóa các biến phân loại.
-    - Biến có 2 giá trị (Binary): Label Encoding (0/1).
-    - Biến có >2 giá trị (Nominal): One-Hot Encoding.
-    """
-    data = df.copy()
-    
-    # Danh sách các cột nhị phân (Yes/No hoặc Male/Female)
-    binary_cols = ['gender', 'Partner', 'Dependents', 'PhoneService', 'PaperlessBilling']
-    
-    for col in binary_cols:
-        if col in data.columns:
-            if col == 'gender':
-                data[col] = data[col].map({'Male': 1, 'Female': 0})
-            else:
-                data[col] = data[col].map({'Yes': 1, 'No': 0})
-                
-    # One-Hot Encoding cho các biến phân loại nhiều lớp
-    multi_class_cols = [
-        'MultipleLines', 'InternetService', 'OnlineSecurity', 
-        'OnlineBackup', 'DeviceProtection', 'TechSupport', 
-        'StreamingTV', 'StreamingMovies', 'Contract', 'PaymentMethod'
-    ]
-    
-    # Chỉ lấy những cột thực sự tồn tại trong dataframe
-    existing_multi_cols = [col for col in multi_class_cols if col in data.columns]
-    
-    data = pd.get_dummies(data, columns=existing_multi_cols, drop_first=True, dtype=int)
-    
-    return data
 
-def create_custom_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tạo các đặc trưng mới dựa trên insight từ EDA.
-    """
+def create_custom_features(
+    df: pd.DataFrame
+) -> pd.DataFrame:
+
     data = df.copy()
-    
-    # Insight 1: Khách hàng rời đi cực nhiều ở giai đoạn 0-10 tháng (Phân tích tenure)
+
+    # =====================================================
+    # TENURE FEATURES
+    # =====================================================
+
     if 'tenure' in data.columns:
-        data['is_new_risk_customer'] = data['tenure'].apply(lambda x: 1 if x <= 10 else 0)
-        data['is_loyal_customer'] = data['tenure'].apply(lambda x: 1 if x >= 70 else 0)
-        
-    # Insight 2: Combo dịch vụ gia tăng giữ chân khách hàng (OnlineSecurity & TechSupport)
-    # Giả sử sau khi One-hot encoding, ta có các cột 'OnlineSecurity_Yes' và 'TechSupport_Yes'
-    if 'OnlineSecurity_Yes' in data.columns and 'TechSupport_Yes' in data.columns:
-        data['has_value_added_services'] = (
-            (data['OnlineSecurity_Yes'] == 1) | (data['TechSupport_Yes'] == 1)
+
+        data['is_new_risk_customer'] = (
+            data['tenure'] <= 12
         ).astype(int)
-        
+
+        data['is_loyal_customer'] = (
+            data['tenure'] >= 60
+        ).astype(int)
+
+        data['tenure_group'] = pd.cut(
+            data['tenure'],
+            bins=[0, 6, 12, 24, 48, 72],
+            labels=[
+                '0_6',
+                '6_12',
+                '12_24',
+                '24_48',
+                '48_72'
+            ]
+        )
+
+    # =====================================================
+    # CHARGE FEATURES
+    # =====================================================
+
+    if (
+        'MonthlyCharges' in data.columns
+        and 'tenure' in data.columns
+    ):
+
+        data['avg_monthly_spent'] = (
+            data['MonthlyCharges'] /
+            (data['tenure'] + 1)
+        )
+
+        data['high_monthly_charge'] = (
+            data['MonthlyCharges'] >= 80
+        ).astype(int)
+
+    if (
+        'TotalCharges' in data.columns
+        and 'tenure' in data.columns
+    ):
+
+        data['charge_per_month'] = (
+            data['TotalCharges'] /
+            (data['tenure'] + 1)
+        )
+
+        data['high_value_customer'] = (
+            data['TotalCharges'] >= 5000
+        ).astype(int)
+
+    # =====================================================
+    # CONTRACT FEATURES
+    # =====================================================
+
+    if 'Contract' in data.columns:
+
+        data['is_month_to_month'] = (
+            data['Contract'] == 'Month-to-month'
+        ).astype(int)
+
+    # =====================================================
+    # INTERNET FEATURES
+    # =====================================================
+
+    if 'InternetService' in data.columns:
+
+        data['is_fiber_optic'] = (
+            data['InternetService'] == 'Fiber optic'
+        ).astype(int)
+
+    # =====================================================
+    # SECURITY FEATURES
+    # =====================================================
+
+    if 'OnlineSecurity' in data.columns:
+
+        data['has_online_security'] = (
+            data['OnlineSecurity'] == 'Yes'
+        ).astype(int)
+
+    if 'TechSupport' in data.columns:
+
+        data['has_tech_support'] = (
+            data['TechSupport'] == 'Yes'
+        ).astype(int)
+
+    # =====================================================
+    # PAYMENT RISK FEATURE
+    # =====================================================
+
+    if (
+        'PaperlessBilling' in data.columns
+        and 'PaymentMethod' in data.columns
+    ):
+
+        data['high_risk_payment'] = (
+            (
+                data['PaperlessBilling'] == 'Yes'
+            ) &
+            (
+                data['PaymentMethod']
+                == 'Electronic check'
+            )
+        ).astype(int)
+
+    # =====================================================
+    # SERVICES COUNT
+    # =====================================================
+
+    service_columns = [
+
+        'PhoneService',
+        'OnlineSecurity',
+        'OnlineBackup',
+        'DeviceProtection',
+        'TechSupport',
+        'StreamingTV',
+        'StreamingMovies'
+    ]
+
+    available_services = [
+
+        col for col in service_columns
+        if col in data.columns
+    ]
+
+    if available_services:
+
+        data['services_count'] = (
+            data[available_services] == 'Yes'
+        ).sum(axis=1)
+
+    # =====================================================
+    # INTERACTION FEATURE
+    # =====================================================
+
+    if (
+        'InternetService' in data.columns
+        and 'Contract' in data.columns
+    ):
+
+        data['fiber_monthly_contract'] = (
+            (
+                data['InternetService']
+                == 'Fiber optic'
+            ) &
+            (
+                data['Contract']
+                == 'Month-to-month'
+            )
+        ).astype(int)
+
     return data
 
-def build_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Pipeline tổng hợp xây dựng đặc trưng cho mô hình."""
-    # 1. Mã hóa biến phân loại
-    df_encoded = encode_categorical_features(df)
-    
-    # 2. Tạo đặc trưng mới từ insight
-    df_featured = create_custom_features(df_encoded)
-    
-    return df_featured
+
+def build_features(
+    df: pd.DataFrame
+) -> pd.DataFrame:
+
+    return create_custom_features(df)

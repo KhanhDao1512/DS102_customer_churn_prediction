@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telco Churn Predictor</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script defer src="/static/app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">TELCO</div>
+        <div>
+          <div class="brand-name">Churn Studio</div>
+          <div class="brand-sub">Prediction workspace</div>
+        </div>
+      </div>
+
+      <section class="side-card intro-card">
+        <p class="eyebrow">Production preview</p>
+        <h1>One screen to inspect churn risk and act fast.</h1>
+        <p class="lede">
+          A product-style interface for telecom inference, with quick actions, clear status, and a visible result area.
+        </p>
+
+        <div class="side-actions">
+          <button type="button" class="ghost-btn" data-action="load-demo">Load demo profile</button>
+          <button type="button" class="ghost-btn" data-action="reset">Reset form</button>
+          <button type="button" class="ghost-btn" data-action="copy">Copy result</button>
+        </div>
+      </section>
+
+      <section class="side-card status-card">
+        <div class="status-row">
+          <span>Model source</span>
+          <strong id="model-source">Preview</strong>
+        </div>
+        <div class="status-row">
+          <span>Prediction state</span>
+          <strong id="prediction-state">Waiting</strong>
+        </div>
+        <div class="status-row">
+          <span>Profile filled</span>
+          <strong id="profile-status">0%</strong>
+        </div>
+      </section>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div class="mini-brand">
+          <span class="mini-mark">TELCO</span>
+          <span>Customer Churn Predictor</span>
+        </div>
+
+        <div class="toolbar">
+          <button type="button" class="chip-btn" data-action="load-demo">Demo</button>
+          <button type="button" class="chip-btn" data-action="reset">Reset</button>
+          <button type="button" class="chip-btn" data-action="copy">Copy</button>
+          <button type="submit" form="churn-form" class="primary-btn">Run prediction</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">FastAPI + ML pipeline</p>
+          <h2>Turn customer attributes into an actionable churn decision.</h2>
+          <p>
+            The app is structured like a real product: input controls on one side, live status in the header, and a result panel that reads like an operational dashboard.
+          </p>
+        </div>
+
+        <div class="hero-metrics">
+          <article class="metric-card">
+            <span>Inference</span>
+            <strong>FastAPI</strong>
+            <p>Backend endpoint ready for model integration.</p>
+          </article>
+          <article class="metric-card">
+            <span>Deployment</span>
+            <strong>Docker</strong>
+            <p>Prepared for containerized delivery.</p>
+          </article>
+          <article class="metric-card">
+            <span>Tracking</span>
+            <strong>MLflow</strong>
+            <p>Model versioning can be wired in next.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="workspace-head">
+          <div>
+            <p class="eyebrow">Customer profile</p>
+            <h3>Fill the form to score churn risk</h3>
+          </div>
+          <div class="pill-row">
+            <span class="pill">Live API</span>
+            <span class="pill">Feature engineering</span>
+            <span class="pill">Ready for model artifact</span>
+          </div>
+        </div>
+
+        <form id="churn-form" class="form-grid">
+          <div class="field-group-title">Customer basics</div>
+          <label>
+            <span>Gender</span>
+            <select name="gender" required>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+            </select>
+          </label>
+          <label>
+            <span>Senior citizen</span>
+            <select name="SeniorCitizen" required>
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </label>
+          <label>
+            <span>Partner</span>
+            <select name="Partner" required>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+          <label>
+            <span>Dependents</span>
+            <select name="Dependents" required>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+          <label>
+            <span>Tenure</span>
+            <input name="tenure" type="number" min="0" max="100" value="12" required />
+          </label>
+          <label>
+            <span>Phone service</span>
+            <select name="PhoneService" required>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+
+          <div class="field-group-title">Service usage</div>
+          <label>
+            <span>Multiple lines</span>
+            <select name="MultipleLines" required>
+              <option value="No phone service">No phone service</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </label>
+          <label>
+            <span>Internet service</span>
+            <select name="InternetService" required>
+              <option value="DSL">DSL</option>
+              <option value="Fiber optic">Fiber optic</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+          <label>
+            <span>Online security</span>
+            <select name="OnlineSecurity" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="No internet service">No internet service</option>
+            </select>
+          </label>
+          <label>
+            <span>Online backup</span>
+            <select name="OnlineBackup" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="No internet service">No internet service</option>
+            </select>
+          </label>
+          <label>
+            <span>Device protection</span>
+            <select name="DeviceProtection" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="No internet service">No internet service</option>
+            </select>
+          </label>
+          <label>
+            <span>Tech support</span>
+            <select name="TechSupport" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="No internet service">No internet service</option>
+            </select>
+          </label>
+          <label>
+            <span>Streaming TV</span>
+            <select name="StreamingTV" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="No internet service">No internet service</option>
+            </select>
+          </label>
+          <label>
+            <span>Streaming movies</span>
+            <select name="StreamingMovies" required>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="No internet service">No internet service</option>
+            </select>
+          </label>
+
+          <div class="field-group-title">Billing</div>
+          <label>
+            <span>Contract</span>
+            <select name="Contract" required>
+              <option value="Month-to-month">Month-to-month</option>
+              <option value="One year">One year</option>
+              <option value="Two year">Two year</option>
+            </select>
+          </label>
+          <label>
+            <span>Paperless billing</span>
+            <select name="PaperlessBilling" required>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </label>
+          <label>
+            <span>Payment method</span>
+            <select name="PaymentMethod" required>
+              <option value="Electronic check">Electronic check</option>
+              <option value="Mailed check">Mailed check</option>
+              <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+              <option value="Credit card (automatic)">Credit card (automatic)</option>
+            </select>
+          </label>
+          <label>
+            <span>Monthly charges</span>
+            <input name="MonthlyCharges" type="number" min="0" step="0.01" value="70.0" required />
+          </label>
+          <label>
+            <span>Total charges</span>
+            <input name="TotalCharges" type="number" min="0" step="0.01" value="1500.0" required />
+          </label>
+
+          <div class="form-actions">
+            <button type="button" class="secondary-btn" data-action="reset">Clear</button>
+            <button type="button" class="secondary-btn" data-action="load-demo">Load demo</button>
+            <button type="submit" class="primary-btn">Run prediction</button>
+            <p id="status">Ready.</p>
+          </div>
+        </form>
+      </section>
+
+      <section class="result-grid">
+        <article class="result-card">
+          <div class="result-head">
+            <div>
+              <p class="eyebrow">Inference</p>
+              <h3 id="result-text">Submit the form to see churn risk.</h3>
+            </div>
+            <div class="result-badge" id="prediction-state-badge">Waiting</div>
+          </div>
+
+          <div class="meter">
+            <div class="meter-track">
+              <span id="risk-bar"></span>
+            </div>
+            <div class="meter-meta">
+              <span id="probability-text">0%</span>
+              <span id="source-text">No request yet</span>
+            </div>
+          </div>
+        </article>
+
+        <aside class="result-side">
+          <div class="score-card">
+            <span>Risk score</span>
+            <strong id="result-score">--</strong>
+          </div>
+          <div class="note-card" id="recommendation">
+            Use the form to generate a recommendation.
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
