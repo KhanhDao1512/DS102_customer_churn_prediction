@@ -24,11 +24,12 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
             errors='coerce'
         )
 
-    # Handle missing values
-    # Median better than 0
+    # Handle missing values using the business relation:
+    # total charges are approximately monthly charges times tenure.
     if 'TotalCharges' in data.columns:
-        median_value = data['TotalCharges'].median()
-        data['TotalCharges'] = data['TotalCharges'].fillna(median_value)
+        data["TotalCharges"] = data["TotalCharges"].fillna(
+            data["MonthlyCharges"] * data["tenure"]
+        )
 
     # Encode target
     if 'Churn' in data.columns:

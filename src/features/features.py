@@ -1,179 +1,223 @@
-# src/features/feature_engineering.py
+# src/features/features.py
 
 import pandas as pd
 
 
-def create_custom_features(
-    df: pd.DataFrame
-) -> pd.DataFrame:
-
+def create_custom_features(df: pd.DataFrame) -> pd.DataFrame:
     data = df.copy()
 
     # =====================================================
     # TENURE FEATURES
     # =====================================================
 
-    if 'tenure' in data.columns:
-
-        data['is_new_risk_customer'] = (
-            data['tenure'] <= 12
+    if "tenure" in data.columns:
+        data["is_new_risk_customer"] = (
+            data["tenure"] <= 12
         ).astype(int)
 
-        data['is_loyal_customer'] = (
-            data['tenure'] >= 60
+        data["is_loyal_customer"] = (
+            data["tenure"] >= 60
         ).astype(int)
 
-        data['tenure_group'] = pd.cut(
-            data['tenure'],
-            bins=[0, 6, 12, 24, 48, 72],
+        data["tenure_group"] = pd.cut(
+            data["tenure"],
+            bins=[-1, 6, 12, 24, 48, 72],
             labels=[
-                '0_6',
-                '6_12',
-                '12_24',
-                '24_48',
-                '48_72'
-            ]
+                "0_6",
+                "6_12",
+                "12_24",
+                "24_48",
+                "48_72",
+            ],
         )
 
     # =====================================================
     # CHARGE FEATURES
     # =====================================================
 
-    if (
-        'MonthlyCharges' in data.columns
-        and 'tenure' in data.columns
-    ):
-
-        data['avg_monthly_spent'] = (
-            data['MonthlyCharges'] /
-            (data['tenure'] + 1)
-        )
-
-        data['high_monthly_charge'] = (
-            data['MonthlyCharges'] >= 80
+    if "MonthlyCharges" in data.columns:
+        data["high_monthly_charge"] = (
+            data["MonthlyCharges"] >= 80
         ).astype(int)
 
     if (
-        'TotalCharges' in data.columns
-        and 'tenure' in data.columns
+        "TotalCharges" in data.columns
+        and "tenure" in data.columns
     ):
-
-        data['charge_per_month'] = (
-            data['TotalCharges'] /
-            (data['tenure'] + 1)
+        data["charge_per_month"] = (
+            data["TotalCharges"] / (data["tenure"] + 1)
         )
 
-        data['high_value_customer'] = (
-            data['TotalCharges'] >= 5000
+        data["high_value_customer"] = (
+            data["TotalCharges"] >= 5000
         ).astype(int)
 
     # =====================================================
     # CONTRACT FEATURES
     # =====================================================
 
-    if 'Contract' in data.columns:
+    if "Contract" in data.columns:
+        data["is_month_to_month"] = (
+            data["Contract"] == "Month-to-month"
+        ).astype(int)
 
-        data['is_month_to_month'] = (
-            data['Contract'] == 'Month-to-month'
+        data["is_long_term_contract"] = (
+            data["Contract"].isin(["One year", "Two year"])
         ).astype(int)
 
     # =====================================================
     # INTERNET FEATURES
     # =====================================================
 
-    if 'InternetService' in data.columns:
+    if "InternetService" in data.columns:
+        data["is_fiber_optic"] = (
+            data["InternetService"] == "Fiber optic"
+        ).astype(int)
 
-        data['is_fiber_optic'] = (
-            data['InternetService'] == 'Fiber optic'
+        data["has_internet_service"] = (
+            data["InternetService"] != "No"
         ).astype(int)
 
     # =====================================================
-    # SECURITY FEATURES
+    # SECURITY / SUPPORT FEATURES
     # =====================================================
 
-    if 'OnlineSecurity' in data.columns:
+    protection_cols = [
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+    ]
 
-        data['has_online_security'] = (
-            data['OnlineSecurity'] == 'Yes'
+    available_protection_cols = [
+        col for col in protection_cols
+        if col in data.columns
+    ]
+
+    if available_protection_cols:
+        data["protection_services_count"] = (
+            data[available_protection_cols] == "Yes"
+        ).sum(axis=1)
+
+        data["has_no_protection_service"] = (
+            data["protection_services_count"] == 0
         ).astype(int)
 
-    if 'TechSupport' in data.columns:
+    if "OnlineSecurity" in data.columns:
+        data["has_online_security"] = (
+            data["OnlineSecurity"] == "Yes"
+        ).astype(int)
 
-        data['has_tech_support'] = (
-            data['TechSupport'] == 'Yes'
+    if "TechSupport" in data.columns:
+        data["has_tech_support"] = (
+            data["TechSupport"] == "Yes"
         ).astype(int)
 
     # =====================================================
-    # PAYMENT RISK FEATURE
+    # STREAMING FEATURES
     # =====================================================
+
+    streaming_cols = [
+        "StreamingTV",
+        "StreamingMovies",
+    ]
+
+    available_streaming_cols = [
+        col for col in streaming_cols
+        if col in data.columns
+    ]
+
+    if available_streaming_cols:
+        data["streaming_services_count"] = (
+            data[available_streaming_cols] == "Yes"
+        ).sum(axis=1)
+
+        data["has_any_streaming"] = (
+            data["streaming_services_count"] > 0
+        ).astype(int)
+
+    # =====================================================
+    # PAYMENT FEATURES
+    # =====================================================
+
+    if "PaymentMethod" in data.columns:
+        data["is_auto_payment"] = (
+            data["PaymentMethod"].isin([
+                "Bank transfer (automatic)",
+                "Credit card (automatic)",
+            ])
+        ).astype(int)
+
+        data["is_electronic_check"] = (
+            data["PaymentMethod"] == "Electronic check"
+        ).astype(int)
 
     if (
-        'PaperlessBilling' in data.columns
-        and 'PaymentMethod' in data.columns
+        "PaperlessBilling" in data.columns
+        and "PaymentMethod" in data.columns
     ):
-
-        data['high_risk_payment'] = (
-            (
-                data['PaperlessBilling'] == 'Yes'
-            ) &
-            (
-                data['PaymentMethod']
-                == 'Electronic check'
-            )
+        data["high_risk_payment"] = (
+            (data["PaperlessBilling"] == "Yes")
+            & (data["PaymentMethod"] == "Electronic check")
         ).astype(int)
 
     # =====================================================
     # SERVICES COUNT
     # =====================================================
 
-    service_columns = [
+    service_count = pd.Series(0, index=data.index)
 
-        'PhoneService',
-        'OnlineSecurity',
-        'OnlineBackup',
-        'DeviceProtection',
-        'TechSupport',
-        'StreamingTV',
-        'StreamingMovies'
+    if "PhoneService" in data.columns:
+        service_count += (data["PhoneService"] == "Yes").astype(int)
+
+    if "InternetService" in data.columns:
+        service_count += (data["InternetService"] != "No").astype(int)
+
+    extra_service_cols = [
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
     ]
 
-    available_services = [
-
-        col for col in service_columns
+    available_extra_service_cols = [
+        col for col in extra_service_cols
         if col in data.columns
     ]
 
-    if available_services:
-
-        data['services_count'] = (
-            data[available_services] == 'Yes'
+    if available_extra_service_cols:
+        service_count += (
+            data[available_extra_service_cols] == "Yes"
         ).sum(axis=1)
 
+    data["services_count"] = service_count
+
     # =====================================================
-    # INTERACTION FEATURE
+    # INTERACTION FEATURES
     # =====================================================
 
     if (
-        'InternetService' in data.columns
-        and 'Contract' in data.columns
+        "InternetService" in data.columns
+        and "Contract" in data.columns
     ):
+        data["fiber_monthly_contract"] = (
+            (data["InternetService"] == "Fiber optic")
+            & (data["Contract"] == "Month-to-month")
+        ).astype(int)
 
-        data['fiber_monthly_contract'] = (
-            (
-                data['InternetService']
-                == 'Fiber optic'
-            ) &
-            (
-                data['Contract']
-                == 'Month-to-month'
-            )
+    if (
+        "tenure" in data.columns
+        and "Contract" in data.columns
+    ):
+        data["new_monthly_contract"] = (
+            (data["tenure"] <= 12)
+            & (data["Contract"] == "Month-to-month")
         ).astype(int)
 
     return data
 
 
-def build_features(
-    df: pd.DataFrame
-) -> pd.DataFrame:
-
+def build_features(df: pd.DataFrame) -> pd.DataFrame:
     return create_custom_features(df)

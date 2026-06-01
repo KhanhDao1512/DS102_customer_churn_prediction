@@ -1,0 +1,2 @@
+Model,Best Params,Best CV F1,Val Accuracy,Val Precision,Val Recall,Val F1,Val ROC_AUC
+Logistic Regression Balanced Tuned,"{'solver': 'lbfgs', 'class_weight': 'balanced', 'C': 0.01}",0.6411961450459003,0.7551454932576295,0.5264116575591985,0.7727272727272727,0.6262188515709642,0.8388630551034644
